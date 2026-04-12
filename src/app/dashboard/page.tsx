@@ -1,0 +1,244 @@
+"use client";
+
+import { useState } from "react";
+
+const statsCards = [
+  { label: "총 팔로워", value: "12,847", change: "+23%", changeType: "up" as const, icon: "followers" },
+  { label: "오늘 좋아요", value: "342", change: "+12%", changeType: "up" as const, icon: "likes" },
+  { label: "오늘 댓글", value: "56", change: "+8%", changeType: "up" as const, icon: "comments" },
+  { label: "활성 계정", value: "3/5", change: "활성", changeType: "neutral" as const, icon: "accounts" },
+];
+
+const followerData = [
+  { day: "월", value: 78 },
+  { day: "화", value: 62 },
+  { day: "수", value: 85 },
+  { day: "목", value: 93 },
+  { day: "금", value: 71 },
+  { day: "토", value: 105 },
+  { day: "일", value: 98 },
+];
+
+const activityLog = [
+  { time: "14:32", account: "@beauty_shop_kr", type: "팔로우", target: "@user_fashion_01", status: "success" },
+  { time: "14:28", account: "@daily_fashion_2024", type: "좋아요", target: "게시물 #38291", status: "success" },
+  { time: "14:25", account: "@beauty_shop_kr", type: "댓글", target: "@travel_korea", status: "success" },
+  { time: "14:20", account: "@food_lover_seoul", type: "팔로우", target: "@cafe_review_kr", status: "failed" },
+  { time: "14:15", account: "@daily_fashion_2024", type: "좋아요", target: "게시물 #38285", status: "success" },
+  { time: "14:10", account: "@beauty_shop_kr", type: "언팔로우", target: "@old_user_123", status: "success" },
+  { time: "14:05", account: "@food_lover_seoul", type: "좋아요", target: "게시물 #38280", status: "success" },
+  { time: "14:00", account: "@beauty_shop_kr", type: "팔로우", target: "@new_beauty_kr", status: "success" },
+];
+
+const taskProgress = [
+  { label: "팔로우", current: 32, max: 50, color: "from-indigo-500 to-blue-500" },
+  { label: "좋아요", current: 45, max: 50, color: "from-purple-500 to-pink-500" },
+  { label: "댓글", current: 8, max: 10, color: "from-emerald-500 to-teal-500" },
+];
+
+function StatIcon({ type }: { type: string }) {
+  switch (type) {
+    case "followers":
+      return (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+        </svg>
+      );
+    case "likes":
+      return (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+        </svg>
+      );
+    case "comments":
+      return (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z" />
+        </svg>
+      );
+    default:
+      return (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      );
+  }
+}
+
+export default function DashboardPage() {
+  const [selectedPeriod] = useState("오늘");
+  const maxFollower = Math.max(...followerData.map((d) => d.value));
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">대시보드</h1>
+          <p className="text-sm text-gray-400 mt-1">InstaBot Pro 자동화 현황을 한눈에 확인하세요</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {["오늘", "7일", "30일"].map((p) => (
+            <button
+              key={p}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                selectedPeriod === p
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-800 text-gray-400 hover:text-white"
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {statsCards.map((stat) => (
+          <div
+            key={stat.label}
+            className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-5 hover:border-indigo-500/30 transition-all"
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-400">{stat.label}</p>
+                <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-indigo-600/20 flex items-center justify-center text-indigo-400">
+                <StatIcon type={stat.icon} />
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-1">
+              {stat.changeType === "up" && (
+                <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                </svg>
+              )}
+              <span className={`text-xs font-medium ${stat.changeType === "up" ? "text-emerald-400" : "text-indigo-400"}`}>
+                {stat.change}
+              </span>
+              <span className="text-xs text-gray-500">전일 대비</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Follower Chart */}
+        <div className="lg:col-span-2 bg-gray-800/50 border border-gray-700/50 rounded-xl p-5">
+          <h2 className="text-lg font-semibold text-white mb-4">팔로워 증감 (최근 7일)</h2>
+          <div className="flex items-end gap-3 h-48">
+            {followerData.map((d) => (
+              <div key={d.day} className="flex-1 flex flex-col items-center gap-2">
+                <span className="text-xs text-gray-400">{d.value}</span>
+                <div
+                  className="w-full bg-gradient-to-t from-indigo-600 to-purple-500 rounded-t-lg transition-all hover:from-indigo-500 hover:to-purple-400"
+                  style={{ height: `${(d.value / maxFollower) * 100}%` }}
+                />
+                <span className="text-xs text-gray-500">{d.day}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Task Progress */}
+        <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-5">
+          <h2 className="text-lg font-semibold text-white mb-4">오늘의 작업 진행률</h2>
+          <div className="space-y-5">
+            {taskProgress.map((task) => (
+              <div key={task.label}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-300">{task.label}</span>
+                  <span className="text-sm font-medium text-white">
+                    {task.current}/{task.max}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-2.5">
+                  <div
+                    className={`bg-gradient-to-r ${task.color} h-2.5 rounded-full transition-all`}
+                    style={{ width: `${(task.current / task.max) * 100}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {Math.round((task.current / task.max) * 100)}% 완료
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6 pt-4 border-t border-gray-700">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-400">전체 진행률</span>
+              <span className="text-lg font-bold text-indigo-400">
+                {Math.round(
+                  (taskProgress.reduce((a, t) => a + t.current, 0) /
+                    taskProgress.reduce((a, t) => a + t.max, 0)) *
+                    100
+                )}
+                %
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Activity Log */}
+      <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-white">최근 활동 로그</h2>
+          <button className="text-xs text-indigo-400 hover:text-indigo-300">전체보기</button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="text-left text-xs text-gray-500 border-b border-gray-700">
+                <th className="pb-3 pr-4">시간</th>
+                <th className="pb-3 pr-4">계정</th>
+                <th className="pb-3 pr-4">작업유형</th>
+                <th className="pb-3 pr-4">대상</th>
+                <th className="pb-3">상태</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm">
+              {activityLog.map((log, i) => (
+                <tr key={i} className="border-b border-gray-700/50 hover:bg-gray-700/20">
+                  <td className="py-3 pr-4 text-gray-400">{log.time}</td>
+                  <td className="py-3 pr-4 text-indigo-400 font-medium">{log.account}</td>
+                  <td className="py-3 pr-4">
+                    <span
+                      className={`px-2 py-0.5 rounded text-xs font-medium ${
+                        log.type === "팔로우"
+                          ? "bg-blue-500/20 text-blue-400"
+                          : log.type === "좋아요"
+                          ? "bg-pink-500/20 text-pink-400"
+                          : log.type === "댓글"
+                          ? "bg-emerald-500/20 text-emerald-400"
+                          : "bg-orange-500/20 text-orange-400"
+                      }`}
+                    >
+                      {log.type}
+                    </span>
+                  </td>
+                  <td className="py-3 pr-4 text-gray-300">{log.target}</td>
+                  <td className="py-3">
+                    {log.status === "success" ? (
+                      <span className="flex items-center gap-1 text-emerald-400 text-xs">
+                        <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                        성공
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-red-400 text-xs">
+                        <span className="w-1.5 h-1.5 bg-red-400 rounded-full" />
+                        실패
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
