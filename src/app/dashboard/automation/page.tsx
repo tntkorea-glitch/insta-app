@@ -165,8 +165,12 @@ export default function AutomationPage() {
             각 자동화 기능의 세부 설정을 조정하세요
           </p>
         </div>
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors">
-          설정 저장
+        <button
+          onClick={saveConfig}
+          disabled={saving}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+        >
+          {saving ? "저장 중..." : "설정 저장"}
         </button>
       </div>
 
