@@ -206,5 +206,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
       </div>
     </div>
+    </AuthGuard>
   );
 }
