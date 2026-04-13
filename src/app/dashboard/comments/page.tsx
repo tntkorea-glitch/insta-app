@@ -30,41 +30,51 @@ export default function CommentsPage() {
   const [newGroupName, setNewGroupName] = useState("");
   const [aiGenerating, setAiGenerating] = useState(false);
 
-  const addComment = (groupId: string) => {
+  const addComment = async (groupId: string) => {
     if (!newComment) return;
-    setGroups((prev) =>
-      prev.map((g) =>
-        g.id === groupId ? { ...g, comments: [...g.comments, newComment] } : g
-      )
-    );
+    const group = groups.find((g) => g.id === groupId);
+    if (!group) return;
+    const updatedComments = [...group.comments, newComment];
+    setGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, comments: updatedComments } : g));
     setNewComment("");
+    await fetch("/api/comments", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: groupId, comments: updatedComments }),
+    });
   };
 
-  const removeComment = (groupId: string, commentIndex: number) => {
-    setGroups((prev) =>
-      prev.map((g) =>
-        g.id === groupId
-          ? { ...g, comments: g.comments.filter((_, i) => i !== commentIndex) }
-          : g
-      )
-    );
+  const removeComment = async (groupId: string, commentIndex: number) => {
+    const group = groups.find((g) => g.id === groupId);
+    if (!group) return;
+    const updatedComments = group.comments.filter((_, i) => i !== commentIndex);
+    setGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, comments: updatedComments } : g));
+    await fetch("/api/comments", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: groupId, comments: updatedComments }),
+    });
   };
 
-  const deleteGroup = (id: string) => {
+  const deleteGroup = async (id: string) => {
     setGroups((prev) => prev.filter((g) => g.id !== id));
+    await fetch(`/api/comments?id=${id}`, { method: "DELETE" });
   };
 
-  const addGroup = () => {
+  const addGroup = async () => {
     if (!newGroupName) return;
-    const group: CommentGroup = {
-      id: Date.now().toString(),
-      name: newGroupName,
-      comments: [],
-    };
-    setGroups((prev) => [...prev, group]);
+    const res = await fetch("/api/comments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newGroupName, comments: [] }),
+    });
+    if (res.ok) {
+      const group = await res.json();
+      setGroups((prev) => [group, ...prev]);
+      setEditingGroup(group.id);
+    }
     setNewGroupName("");
     setShowAddGroup(false);
-    setEditingGroup(group.id);
   };
 
   const handleAiGenerate = (groupId: string) => {
