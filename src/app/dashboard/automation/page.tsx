@@ -57,8 +57,11 @@ function Slider({
 }
 
 export default function AutomationPage() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
   // Follow settings
-  const [followEnabled, setFollowEnabled] = useState(true);
+  const [followEnabled, setFollowEnabled] = useState(false);
   const [maxFollow, setMaxFollow] = useState(50);
   const [followDelay, setFollowDelay] = useState(30);
   const [followRandomDelay, setFollowRandomDelay] = useState(true);
@@ -66,25 +69,91 @@ export default function AutomationPage() {
   const [followRandomMax, setFollowRandomMax] = useState(60);
 
   // Unfollow settings
-  const [unfollowEnabled, setUnfollowEnabled] = useState(true);
-  const [maxUnfollow, setMaxUnfollow] = useState(30);
-  const [unfollowDelay, setUnfollowDelay] = useState(45);
+  const [unfollowEnabled, setUnfollowEnabled] = useState(false);
+  const [maxUnfollow, setMaxUnfollow] = useState(40);
+  const [unfollowDelay, setUnfollowDelay] = useState(30);
   const [excludeFriends, setExcludeFriends] = useState(true);
 
   // Like settings
-  const [likeEnabled, setLikeEnabled] = useState(true);
-  const [maxLike, setMaxLike] = useState(50);
+  const [likeEnabled, setLikeEnabled] = useState(false);
+  const [maxLike, setMaxLike] = useState(100);
   const [likeDelay, setLikeDelay] = useState(15);
 
   // Comment settings
-  const [commentEnabled, setCommentEnabled] = useState(true);
-  const [maxComment, setMaxComment] = useState(10);
+  const [commentEnabled, setCommentEnabled] = useState(false);
+  const [maxComment, setMaxComment] = useState(20);
   const [commentNoFollow, setCommentNoFollow] = useState(false);
 
   // Safety settings
   const [detectionDelay, setDetectionDelay] = useState(300);
   const [dailyLimit, setDailyLimit] = useState(500);
   const [autoPause, setAutoPause] = useState(true);
+
+  const loadConfig = useCallback(async () => {
+    try {
+      const res = await fetch("/api/automation");
+      if (res.ok) {
+        const data = await res.json();
+        setFollowEnabled(data.followEnabled);
+        setMaxFollow(data.maxFollow);
+        setFollowDelay(data.followDelay);
+        setFollowRandomDelay(data.followRandom);
+        setFollowRandomMin(data.followRandomMin);
+        setFollowRandomMax(data.followRandomMax);
+        setUnfollowEnabled(data.unfollowEnabled);
+        setMaxUnfollow(data.maxUnfollow);
+        setUnfollowDelay(data.unfollowDelay);
+        setExcludeFriends(data.excludeFriends);
+        setLikeEnabled(data.likeEnabled);
+        setMaxLike(data.maxLike);
+        setLikeDelay(data.likeDelay);
+        setCommentEnabled(data.commentEnabled);
+        setMaxComment(data.maxComment);
+        setCommentNoFollow(data.commentNoFollow);
+        setDetectionDelay(data.detectionDelay);
+        setDailyLimit(data.dailyLimit);
+        setAutoPause(data.autoPause);
+      }
+    } catch (err) {
+      console.error("Failed to load config:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadConfig();
+  }, [loadConfig]);
+
+  const saveConfig = async () => {
+    setSaving(true);
+    try {
+      await fetch("/api/automation", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          followEnabled, maxFollow, followDelay,
+          followRandom: followRandomDelay, followRandomMin, followRandomMax,
+          unfollowEnabled, maxUnfollow, unfollowDelay, excludeFriends,
+          likeEnabled, maxLike, likeDelay,
+          commentEnabled, maxComment, commentNoFollow,
+          detectionDelay, dailyLimit, autoPause,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to save config:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
