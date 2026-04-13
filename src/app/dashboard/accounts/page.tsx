@@ -197,6 +197,7 @@ export default function AccountsPage() {
                   <th className="px-5 py-3">팔로워</th>
                   <th className="px-5 py-3">팔로잉</th>
                   <th className="px-5 py-3">마지막 활동</th>
+                  <th className="px-5 py-3">자동화</th>
                   <th className="px-5 py-3">활성화</th>
                   <th className="px-5 py-3">액션</th>
                 </tr>
