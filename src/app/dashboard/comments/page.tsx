@@ -8,52 +8,22 @@ interface CommentGroup {
   comments: string[];
 }
 
-const initialGroups: CommentGroup[] = [
-  {
-    id: "1",
-    name: "일반 인사",
-    comments: [
-      "좋은 사진이네요!",
-      "너무 예뻐요 :)",
-      "멋진 피드네요!",
-      "오늘도 좋은 하루 보내세요!",
-      "항상 응원합니다!",
-      "분위기 너무 좋아요~",
-      "감성적이네요!",
-    ],
-  },
-  {
-    id: "2",
-    name: "뷰티/패션",
-    comments: [
-      "스타일 너무 좋아요!",
-      "어디 브랜드예요?",
-      "색감이 예술이네요!",
-      "피부 진짜 좋으시다..",
-      "이 룩 너무 예뻐요!",
-      "메이크업 정보 좀 알려주세요!",
-      "센스가 남다르시네요!",
-      "오늘 코디 최고예요!",
-    ],
-  },
-  {
-    id: "3",
-    name: "음식/카페",
-    comments: [
-      "맛있겠다! 어디예요?",
-      "여기 가보고 싶네요!",
-      "플레이팅 예술이네요!",
-      "위치 좀 알려주세요~",
-      "분위기 좋은 곳이네요!",
-      "메뉴 추천 부탁드려요!",
-      "다음에 꼭 가봐야겠어요!",
-      "사진만 봐도 맛있어 보여요!",
-    ],
-  },
-];
-
 export default function CommentsPage() {
-  const [groups, setGroups] = useState<CommentGroup[]>(initialGroups);
+  const [groups, setGroups] = useState<CommentGroup[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchGroups = useCallback(async () => {
+    try {
+      const res = await fetch("/api/comments");
+      if (res.ok) setGroups(await res.json());
+    } catch (err) {
+      console.error("Failed to fetch comments:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchGroups(); }, [fetchGroups]);
   const [editingGroup, setEditingGroup] = useState<string | null>(null);
   const [newComment, setNewComment] = useState("");
   const [showAddGroup, setShowAddGroup] = useState(false);
