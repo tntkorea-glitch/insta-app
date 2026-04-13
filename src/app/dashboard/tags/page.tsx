@@ -33,27 +33,34 @@ export default function TagsPage() {
   const [newGroupTags, setNewGroupTags] = useState("");
   const [newExcludeTag, setNewExcludeTag] = useState("");
 
-  const toggleGroupSetting = (id: string, key: "followEnabled" | "likeEnabled" | "commentEnabled") => {
-    setTagGroups((prev) =>
-      prev.map((g) => (g.id === id ? { ...g, [key]: !g[key] } : g))
-    );
+  const toggleGroupSetting = async (id: string, key: "followEnabled" | "likeEnabled" | "commentEnabled") => {
+    const group = tagGroups.find((g) => g.id === id);
+    if (!group) return;
+    setTagGroups((prev) => prev.map((g) => (g.id === id ? { ...g, [key]: !g[key] } : g)));
+    await fetch("/api/tags", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, [key]: !group[key] }),
+    });
   };
 
-  const deleteGroup = (id: string) => {
+  const deleteGroup = async (id: string) => {
     setTagGroups((prev) => prev.filter((g) => g.id !== id));
+    await fetch(`/api/tags?id=${id}`, { method: "DELETE" });
   };
 
-  const addGroup = () => {
+  const addGroup = async () => {
     if (!newGroupName || !newGroupTags) return;
-    const group: TagGroup = {
-      id: Date.now().toString(),
-      name: newGroupName,
-      tags: newGroupTags.split(",").map((t) => t.trim()).filter(Boolean),
-      followEnabled: true,
-      likeEnabled: true,
-      commentEnabled: false,
-    };
-    setTagGroups((prev) => [...prev, group]);
+    const tags = newGroupTags.split(",").map((t) => t.trim()).filter(Boolean);
+    const res = await fetch("/api/tags", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newGroupName, tags }),
+    });
+    if (res.ok) {
+      const group = await res.json();
+      setTagGroups((prev) => [group, ...prev]);
+    }
     setNewGroupName("");
     setNewGroupTags("");
     setShowAddModal(false);
