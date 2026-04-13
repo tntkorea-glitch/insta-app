@@ -27,6 +27,7 @@ export default function AccountsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [runningIds, setRunningIds] = useState<Set<string>>(new Set());
 
   const fetchAccounts = useCallback(async () => {
     try {
