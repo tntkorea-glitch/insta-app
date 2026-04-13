@@ -79,7 +79,7 @@ export default function CommentsPage() {
 
   const handleAiGenerate = (groupId: string) => {
     setAiGenerating(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       const aiComments = [
         "완전 공감가는 포스팅이에요!",
         "오늘도 좋은 콘텐츠 감사해요!",
@@ -87,12 +87,19 @@ export default function CommentsPage() {
         "진짜 대박이네요!",
         "이런 감성 너무 좋아요!",
       ];
+      const group = groups.find((g) => g.id === groupId);
+      const updatedComments = [...(group?.comments || []), ...aiComments];
       setGroups((prev) =>
         prev.map((g) =>
-          g.id === groupId ? { ...g, comments: [...g.comments, ...aiComments] } : g
+          g.id === groupId ? { ...g, comments: updatedComments } : g
         )
       );
       setAiGenerating(false);
+      await fetch("/api/comments", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: groupId, comments: updatedComments }),
+      });
     }, 1500);
   };
 
