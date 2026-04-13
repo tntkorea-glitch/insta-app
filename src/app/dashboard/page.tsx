@@ -1,40 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const statsCards = [
-  { label: "총 팔로워", value: "12,847", change: "+23%", changeType: "up" as const, icon: "followers" },
-  { label: "오늘 좋아요", value: "342", change: "+12%", changeType: "up" as const, icon: "likes" },
-  { label: "오늘 댓글", value: "56", change: "+8%", changeType: "up" as const, icon: "comments" },
-  { label: "활성 계정", value: "3/5", change: "활성", changeType: "neutral" as const, icon: "accounts" },
-];
+interface DashboardData {
+  stats: {
+    totalFollowers: number;
+    totalFollowing: number;
+    activeAccounts: number;
+    totalAccounts: number;
+  };
+  todayStats: {
+    follows: number;
+    likes: number;
+    comments: number;
+    unfollows: number;
+  };
+  recentLogs: {
+    id: string;
+    time: string;
+    account: string;
+    type: string;
+    target: string;
+    status: string;
+  }[];
+}
 
-const followerData = [
-  { day: "월", value: 78 },
-  { day: "화", value: 62 },
-  { day: "수", value: 85 },
-  { day: "목", value: 93 },
-  { day: "금", value: 71 },
-  { day: "토", value: 105 },
-  { day: "일", value: 98 },
-];
-
-const activityLog = [
-  { time: "14:32", account: "@beauty_shop_kr", type: "팔로우", target: "@user_fashion_01", status: "success" },
-  { time: "14:28", account: "@daily_fashion_2024", type: "좋아요", target: "게시물 #38291", status: "success" },
-  { time: "14:25", account: "@beauty_shop_kr", type: "댓글", target: "@travel_korea", status: "success" },
-  { time: "14:20", account: "@food_lover_seoul", type: "팔로우", target: "@cafe_review_kr", status: "failed" },
-  { time: "14:15", account: "@daily_fashion_2024", type: "좋아요", target: "게시물 #38285", status: "success" },
-  { time: "14:10", account: "@beauty_shop_kr", type: "언팔로우", target: "@old_user_123", status: "success" },
-  { time: "14:05", account: "@food_lover_seoul", type: "좋아요", target: "게시물 #38280", status: "success" },
-  { time: "14:00", account: "@beauty_shop_kr", type: "팔로우", target: "@new_beauty_kr", status: "success" },
-];
-
-const taskProgress = [
-  { label: "팔로우", current: 32, max: 50, color: "from-indigo-500 to-blue-500" },
-  { label: "좋아요", current: 45, max: 50, color: "from-purple-500 to-pink-500" },
-  { label: "댓글", current: 8, max: 10, color: "from-emerald-500 to-teal-500" },
-];
+const typeLabels: Record<string, string> = {
+  follow: "팔로우",
+  unfollow: "언팔로우",
+  like: "좋아요",
+  comment: "댓글",
+};
 
 function StatIcon({ type }: { type: string }) {
   switch (type) {
@@ -66,8 +62,66 @@ function StatIcon({ type }: { type: string }) {
 }
 
 export default function DashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [selectedPeriod] = useState("오늘");
-  const maxFollower = Math.max(...followerData.map((d) => d.value));
+
+  useEffect(() => {
+    fetch("/api/dashboard")
+      .then((res) => res.json())
+      .then(setData)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const statsCards = data
+    ? [
+        {
+          label: "총 팔로워",
+          value: data.stats.totalFollowers.toLocaleString(),
+          change: `${data.stats.totalAccounts}개 계정`,
+          changeType: "neutral" as const,
+          icon: "followers",
+        },
+        {
+          label: "오늘 팔로우",
+          value: data.todayStats.follows.toString(),
+          change: "오늘",
+          changeType: "up" as const,
+          icon: "likes",
+        },
+        {
+          label: "오늘 좋아요",
+          value: data.todayStats.likes.toString(),
+          change: "오늘",
+          changeType: "up" as const,
+          icon: "comments",
+        },
+        {
+          label: "활성 계정",
+          value: `${data.stats.activeAccounts}/${data.stats.totalAccounts}`,
+          change: "활성",
+          changeType: "neutral" as const,
+          icon: "accounts",
+        },
+      ]
+    : [];
+
+  const taskProgress = data
+    ? [
+        { label: "팔로우", current: data.todayStats.follows, max: 50, color: "from-indigo-500 to-blue-500" },
+        { label: "좋아요", current: data.todayStats.likes, max: 100, color: "from-purple-500 to-pink-500" },
+        { label: "댓글", current: data.todayStats.comments, max: 20, color: "from-emerald-500 to-teal-500" },
+      ]
+    : [];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -110,36 +164,33 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="mt-3 flex items-center gap-1">
-              {stat.changeType === "up" && (
-                <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
-                </svg>
-              )}
               <span className={`text-xs font-medium ${stat.changeType === "up" ? "text-emerald-400" : "text-indigo-400"}`}>
                 {stat.change}
               </span>
-              <span className="text-xs text-gray-500">전일 대비</span>
             </div>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Follower Chart */}
+        {/* Stats summary */}
         <div className="lg:col-span-2 bg-gray-800/50 border border-gray-700/50 rounded-xl p-5">
-          <h2 className="text-lg font-semibold text-white mb-4">팔로워 증감 (최근 7일)</h2>
-          <div className="flex items-end gap-3 h-48">
-            {followerData.map((d) => (
-              <div key={d.day} className="flex-1 flex flex-col items-center gap-2">
-                <span className="text-xs text-gray-400">{d.value}</span>
-                <div
-                  className="w-full bg-gradient-to-t from-indigo-600 to-purple-500 rounded-t-lg transition-all hover:from-indigo-500 hover:to-purple-400"
-                  style={{ height: `${(d.value / maxFollower) * 100}%` }}
-                />
-                <span className="text-xs text-gray-500">{d.day}</span>
-              </div>
-            ))}
-          </div>
+          <h2 className="text-lg font-semibold text-white mb-4">오늘의 활동 요약</h2>
+          {data && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { label: "팔로우", value: data.todayStats.follows, color: "text-blue-400" },
+                { label: "언팔로우", value: data.todayStats.unfollows, color: "text-orange-400" },
+                { label: "좋아요", value: data.todayStats.likes, color: "text-pink-400" },
+                { label: "댓글", value: data.todayStats.comments, color: "text-emerald-400" },
+              ].map((item) => (
+                <div key={item.label} className="text-center p-4 bg-gray-900/50 rounded-lg">
+                  <p className={`text-3xl font-bold ${item.color}`}>{item.value}</p>
+                  <p className="text-sm text-gray-400 mt-1">{item.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Task Progress */}
@@ -157,28 +208,33 @@ export default function DashboardPage() {
                 <div className="w-full bg-gray-700 rounded-full h-2.5">
                   <div
                     className={`bg-gradient-to-r ${task.color} h-2.5 rounded-full transition-all`}
-                    style={{ width: `${(task.current / task.max) * 100}%` }}
+                    style={{ width: `${Math.min((task.current / task.max) * 100, 100)}%` }}
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  {Math.round((task.current / task.max) * 100)}% 완료
+                  {Math.min(Math.round((task.current / task.max) * 100), 100)}% 완료
                 </p>
               </div>
             ))}
           </div>
-          <div className="mt-6 pt-4 border-t border-gray-700">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">전체 진행률</span>
-              <span className="text-lg font-bold text-indigo-400">
-                {Math.round(
-                  (taskProgress.reduce((a, t) => a + t.current, 0) /
-                    taskProgress.reduce((a, t) => a + t.max, 0)) *
+          {taskProgress.length > 0 && (
+            <div className="mt-6 pt-4 border-t border-gray-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-400">전체 진행률</span>
+                <span className="text-lg font-bold text-indigo-400">
+                  {Math.min(
+                    Math.round(
+                      (taskProgress.reduce((a, t) => a + t.current, 0) /
+                        taskProgress.reduce((a, t) => a + t.max, 0)) *
+                        100
+                    ),
                     100
-                )}
-                %
-              </span>
+                  )}
+                  %
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -186,57 +242,65 @@ export default function DashboardPage() {
       <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white">최근 활동 로그</h2>
-          <button className="text-xs text-indigo-400 hover:text-indigo-300">전체보기</button>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="text-left text-xs text-gray-500 border-b border-gray-700">
-                <th className="pb-3 pr-4">시간</th>
-                <th className="pb-3 pr-4">계정</th>
-                <th className="pb-3 pr-4">작업유형</th>
-                <th className="pb-3 pr-4">대상</th>
-                <th className="pb-3">상태</th>
-              </tr>
-            </thead>
-            <tbody className="text-sm">
-              {activityLog.map((log, i) => (
-                <tr key={i} className="border-b border-gray-700/50 hover:bg-gray-700/20">
-                  <td className="py-3 pr-4 text-gray-400">{log.time}</td>
-                  <td className="py-3 pr-4 text-indigo-400 font-medium">{log.account}</td>
-                  <td className="py-3 pr-4">
-                    <span
-                      className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        log.type === "팔로우"
-                          ? "bg-blue-500/20 text-blue-400"
-                          : log.type === "좋아요"
-                          ? "bg-pink-500/20 text-pink-400"
-                          : log.type === "댓글"
-                          ? "bg-emerald-500/20 text-emerald-400"
-                          : "bg-orange-500/20 text-orange-400"
-                      }`}
-                    >
-                      {log.type}
-                    </span>
-                  </td>
-                  <td className="py-3 pr-4 text-gray-300">{log.target}</td>
-                  <td className="py-3">
-                    {log.status === "success" ? (
-                      <span className="flex items-center gap-1 text-emerald-400 text-xs">
-                        <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
-                        성공
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-red-400 text-xs">
-                        <span className="w-1.5 h-1.5 bg-red-400 rounded-full" />
-                        실패
-                      </span>
-                    )}
-                  </td>
+          {data?.recentLogs && data.recentLogs.length > 0 ? (
+            <table className="w-full">
+              <thead>
+                <tr className="text-left text-xs text-gray-500 border-b border-gray-700">
+                  <th className="pb-3 pr-4">시간</th>
+                  <th className="pb-3 pr-4">계정</th>
+                  <th className="pb-3 pr-4">작업유형</th>
+                  <th className="pb-3 pr-4">대상</th>
+                  <th className="pb-3">상태</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="text-sm">
+                {data.recentLogs.map((log) => (
+                  <tr key={log.id} className="border-b border-gray-700/50 hover:bg-gray-700/20">
+                    <td className="py-3 pr-4 text-gray-400">
+                      {new Date(log.time).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
+                    </td>
+                    <td className="py-3 pr-4 text-indigo-400 font-medium">@{log.account}</td>
+                    <td className="py-3 pr-4">
+                      <span
+                        className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          log.type === "follow"
+                            ? "bg-blue-500/20 text-blue-400"
+                            : log.type === "like"
+                            ? "bg-pink-500/20 text-pink-400"
+                            : log.type === "comment"
+                            ? "bg-emerald-500/20 text-emerald-400"
+                            : "bg-orange-500/20 text-orange-400"
+                        }`}
+                      >
+                        {typeLabels[log.type] || log.type}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-4 text-gray-300">{log.target}</td>
+                    <td className="py-3">
+                      {log.status === "success" ? (
+                        <span className="flex items-center gap-1 text-emerald-400 text-xs">
+                          <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                          성공
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-red-400 text-xs">
+                          <span className="w-1.5 h-1.5 bg-red-400 rounded-full" />
+                          실패
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="text-center py-12 text-gray-500">
+              <p className="text-lg mb-2">활동 로그가 없습니다</p>
+              <p className="text-sm">계정을 추가하고 자동화를 시작하면 여기에 로그가 표시됩니다</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
