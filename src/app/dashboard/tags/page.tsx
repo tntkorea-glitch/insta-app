@@ -11,38 +11,23 @@ interface TagGroup {
   commentEnabled: boolean;
 }
 
-const initialTagGroups: TagGroup[] = [
-  {
-    id: "1",
-    name: "맞팔그룹",
-    tags: ["선팔", "맞팔", "맞팔해요", "소통", "소통해요", "팔로우", "f4f"],
-    followEnabled: true,
-    likeEnabled: true,
-    commentEnabled: false,
-  },
-  {
-    id: "2",
-    name: "뷰티그룹",
-    tags: ["뷰티", "셀피", "얼스타그램", "화장품", "스킨케어", "메이크업"],
-    followEnabled: true,
-    likeEnabled: true,
-    commentEnabled: true,
-  },
-  {
-    id: "3",
-    name: "음식그룹",
-    tags: ["맛집", "먹스타그램", "foodie", "카페", "디저트", "맛집추천"],
-    followEnabled: false,
-    likeEnabled: true,
-    commentEnabled: false,
-  },
-];
-
-const initialExcludeTags = ["광고", "스팸", "홍보", "판매", "돈벌기", "재테크", "부업"];
-
 export default function TagsPage() {
-  const [tagGroups, setTagGroups] = useState<TagGroup[]>(initialTagGroups);
-  const [excludeTags, setExcludeTags] = useState<string[]>(initialExcludeTags);
+  const [tagGroups, setTagGroups] = useState<TagGroup[]>([]);
+  const [excludeTags, setExcludeTags] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchTags = useCallback(async () => {
+    try {
+      const res = await fetch("/api/tags");
+      if (res.ok) setTagGroups(await res.json());
+    } catch (err) {
+      console.error("Failed to fetch tags:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchTags(); }, [fetchTags]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupTags, setNewGroupTags] = useState("");
