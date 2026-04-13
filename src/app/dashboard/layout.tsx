@@ -86,8 +86,13 @@ const menuItems = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const { data: session } = useSession();
+
+  const userName = session?.user?.name || "User";
+  const userInitial = userName.charAt(0).toUpperCase();
 
   return (
+    <AuthGuard>
     <div className="flex h-screen bg-gray-900 text-gray-100">
       {/* Mobile overlay */}
       {sidebarOpen && (
