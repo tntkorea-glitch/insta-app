@@ -97,6 +97,34 @@ export default function AccountsPage() {
     }
   };
 
+  const toggleAutomation = async (accountId: string, isRunning: boolean) => {
+    const action = isRunning ? "stop" : "start";
+    try {
+      const res = await fetch("/api/automation/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accountId, action }),
+      });
+      if (res.ok) {
+        setRunningIds((prev) => {
+          const next = new Set(prev);
+          if (isRunning) next.delete(accountId);
+          else next.add(accountId);
+          return next;
+        });
+        setAccounts((prev) =>
+          prev.map((acc) =>
+            acc.id === accountId
+              ? { ...acc, status: isRunning ? "idle" : "running" }
+              : acc
+          )
+        );
+      }
+    } catch (e) {
+      console.error("자동화 토글 실패:", e);
+    }
+  };
+
   const formatLastActivity = (date: string | null) => {
     if (!date) return "없음";
     const diff = Date.now() - new Date(date).getTime();
