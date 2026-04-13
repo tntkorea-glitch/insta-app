@@ -49,3 +49,8 @@ secrets/
 credentials*.json
 
 /src/generated/prisma
+
+# database
+*.db
+*.db-journal
+cookies.txt
