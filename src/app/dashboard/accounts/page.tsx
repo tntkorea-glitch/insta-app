@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface Account {
   id: string;
@@ -8,80 +8,112 @@ interface Account {
   followers: number;
   following: number;
   active: boolean;
-  lastActivity: string;
+  lastActivity: string | null;
   status: string;
 }
 
-const initialAccounts: Account[] = [
-  {
-    id: "1",
-    username: "@beauty_shop_kr",
-    followers: 5243,
-    following: 1832,
-    active: true,
-    lastActivity: "2분 전",
-    status: "자동화 실행 중",
-  },
-  {
-    id: "2",
-    username: "@daily_fashion_2024",
-    followers: 4102,
-    following: 2105,
-    active: true,
-    lastActivity: "5분 전",
-    status: "자동화 실행 중",
-  },
-  {
-    id: "3",
-    username: "@food_lover_seoul",
-    followers: 3502,
-    following: 987,
-    active: false,
-    lastActivity: "2시간 전",
-    status: "일시정지",
-  },
-];
+const statusLabels: Record<string, string> = {
+  idle: "대기 중",
+  running: "자동화 실행 중",
+  paused: "일시정지",
+  error: "오류",
+};
 
 export default function AccountsPage() {
-  const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  const toggleAccount = (id: string) => {
+  const fetchAccounts = useCallback(async () => {
+    try {
+      const res = await fetch("/api/accounts");
+      if (res.ok) {
+        const data = await res.json();
+        setAccounts(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch accounts:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAccounts();
+  }, [fetchAccounts]);
+
+  const toggleAccount = async (id: string, currentActive: boolean) => {
+    await fetch("/api/accounts", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, active: !currentActive }),
+    });
     setAccounts((prev) =>
       prev.map((acc) =>
         acc.id === id
-          ? {
-              ...acc,
-              active: !acc.active,
-              status: !acc.active ? "자동화 실행 중" : "일시정지",
-            }
+          ? { ...acc, active: !acc.active, status: !acc.active ? "running" : "paused" }
           : acc
       )
     );
   };
 
-  const deleteAccount = (id: string) => {
+  const deleteAccount = async (id: string) => {
+    if (!confirm("정말 이 계정을 삭제하시겠습니까?")) return;
+    await fetch(`/api/accounts?id=${id}`, { method: "DELETE" });
     setAccounts((prev) => prev.filter((acc) => acc.id !== id));
   };
 
-  const addAccount = () => {
-    if (!newUsername) return;
-    const newAcc: Account = {
-      id: Date.now().toString(),
-      username: newUsername.startsWith("@") ? newUsername : `@${newUsername}`,
-      followers: 0,
-      following: 0,
-      active: false,
-      lastActivity: "방금",
-      status: "연결 대기",
-    };
-    setAccounts((prev) => [...prev, newAcc]);
-    setNewUsername("");
-    setNewPassword("");
-    setShowModal(false);
+  const addAccount = async () => {
+    if (!newUsername || !newPassword) return;
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: newUsername.replace(/^@/, ""),
+          password: newPassword,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error);
+        return;
+      }
+      setAccounts((prev) => [data, ...prev]);
+      setNewUsername("");
+      setNewPassword("");
+      setShowModal(false);
+    } catch {
+      setError("계정 추가에 실패했습니다");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const formatLastActivity = (date: string | null) => {
+    if (!date) return "없음";
+    const diff = Date.now() - new Date(date).getTime();
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 1) return "방금";
+    if (minutes < 60) return `${minutes}분 전`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}시간 전`;
+    return `${Math.floor(hours / 24)}일 전`;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -126,80 +158,77 @@ export default function AccountsPage() {
 
       {/* Accounts Table */}
       <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="text-left text-xs text-gray-500 border-b border-gray-700 bg-gray-800/50">
-                <th className="px-5 py-3">계정</th>
-                <th className="px-5 py-3">상태</th>
-                <th className="px-5 py-3">팔로워</th>
-                <th className="px-5 py-3">팔로잉</th>
-                <th className="px-5 py-3">마지막 활동</th>
-                <th className="px-5 py-3">활성화</th>
-                <th className="px-5 py-3">액션</th>
-              </tr>
-            </thead>
-            <tbody>
-              {accounts.map((account) => (
-                <tr
-                  key={account.id}
-                  className="border-b border-gray-700/50 hover:bg-gray-700/20 transition-colors"
-                >
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-500 flex items-center justify-center text-white text-sm font-bold">
-                        {account.username.charAt(1).toUpperCase()}
+        {accounts.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="text-left text-xs text-gray-500 border-b border-gray-700 bg-gray-800/50">
+                  <th className="px-5 py-3">계정</th>
+                  <th className="px-5 py-3">상태</th>
+                  <th className="px-5 py-3">팔로워</th>
+                  <th className="px-5 py-3">팔로잉</th>
+                  <th className="px-5 py-3">마지막 활동</th>
+                  <th className="px-5 py-3">활성화</th>
+                  <th className="px-5 py-3">액션</th>
+                </tr>
+              </thead>
+              <tbody>
+                {accounts.map((account) => (
+                  <tr
+                    key={account.id}
+                    className="border-b border-gray-700/50 hover:bg-gray-700/20 transition-colors"
+                  >
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-500 flex items-center justify-center text-white text-sm font-bold">
+                          {account.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">@{account.username}</p>
+                          <p className="text-xs text-gray-500">{statusLabels[account.status] || account.status}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-white">{account.username}</p>
-                        <p className="text-xs text-gray-500">{account.status}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                        account.active
-                          ? "bg-emerald-500/20 text-emerald-400"
-                          : "bg-gray-600/30 text-gray-400"
-                      }`}
-                    >
+                    </td>
+                    <td className="px-5 py-4">
                       <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          account.active ? "bg-emerald-400 animate-pulse" : "bg-gray-500"
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                          account.active
+                            ? "bg-emerald-500/20 text-emerald-400"
+                            : "bg-gray-600/30 text-gray-400"
                         }`}
-                      />
-                      {account.active ? "활성" : "비활성"}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4 text-sm text-gray-300">
-                    {account.followers.toLocaleString()}
-                  </td>
-                  <td className="px-5 py-4 text-sm text-gray-300">
-                    {account.following.toLocaleString()}
-                  </td>
-                  <td className="px-5 py-4 text-sm text-gray-400">{account.lastActivity}</td>
-                  <td className="px-5 py-4">
-                    <button
-                      onClick={() => toggleAccount(account.id)}
-                      className={`relative w-11 h-6 rounded-full transition-colors ${
-                        account.active ? "bg-indigo-600" : "bg-gray-600"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                          account.active ? "translate-x-5" : "translate-x-0"
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            account.active ? "bg-emerald-400 animate-pulse" : "bg-gray-500"
+                          }`}
+                        />
+                        {account.active ? "활성" : "비활성"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-sm text-gray-300">
+                      {account.followers.toLocaleString()}
+                    </td>
+                    <td className="px-5 py-4 text-sm text-gray-300">
+                      {account.following.toLocaleString()}
+                    </td>
+                    <td className="px-5 py-4 text-sm text-gray-400">
+                      {formatLastActivity(account.lastActivity)}
+                    </td>
+                    <td className="px-5 py-4">
+                      <button
+                        onClick={() => toggleAccount(account.id, account.active)}
+                        className={`relative w-11 h-6 rounded-full transition-colors ${
+                          account.active ? "bg-indigo-600" : "bg-gray-600"
                         }`}
-                      />
-                    </button>
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-2">
-                      <button className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                        </svg>
+                      >
+                        <span
+                          className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                            account.active ? "translate-x-5" : "translate-x-0"
+                          }`}
+                        />
                       </button>
+                    </td>
+                    <td className="px-5 py-4">
                       <button
                         onClick={() => deleteAccount(account.id)}
                         className="p-1.5 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors"
@@ -208,13 +237,21 @@ export default function AccountsPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                         </svg>
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-16 text-gray-500">
+            <svg className="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
+            <p className="text-lg mb-2">등록된 계정이 없습니다</p>
+            <p className="text-sm">위의 &quot;계정 추가&quot; 버튼을 클릭하여 인스타그램 계정을 추가하세요</p>
+          </div>
+        )}
       </div>
 
       {/* Modal */}
@@ -224,7 +261,7 @@ export default function AccountsPage() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-white">계정 추가</h2>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => { setShowModal(false); setError(""); }}
                 className="p-1 rounded-lg hover:bg-gray-700 text-gray-400"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -232,6 +269,12 @@ export default function AccountsPage() {
                 </svg>
               </button>
             </div>
+
+            {error && (
+              <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm mb-4">
+                {error}
+              </div>
+            )}
 
             <div className="space-y-4">
               <div>
@@ -242,7 +285,7 @@ export default function AccountsPage() {
                   type="text"
                   value={newUsername}
                   onChange={(e) => setNewUsername(e.target.value)}
-                  placeholder="@username"
+                  placeholder="username"
                   className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                 />
               </div>
@@ -268,16 +311,17 @@ export default function AccountsPage() {
 
             <div className="flex gap-3 mt-6">
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => { setShowModal(false); setError(""); }}
                 className="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-300 py-2.5 rounded-lg text-sm font-medium transition-colors"
               >
                 취소
               </button>
               <button
                 onClick={addAccount}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg text-sm font-medium transition-colors"
+                disabled={saving}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
               >
-                추가하기
+                {saving ? "추가 중..." : "추가하기"}
               </button>
             </div>
           </div>
