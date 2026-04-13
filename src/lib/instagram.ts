@@ -67,7 +67,7 @@ export async function unfollowUser(ig: IgApiClient, targetUsername: string): Pro
 
 export async function likePost(ig: IgApiClient, mediaId: string): Promise<ActionResult> {
   try {
-    await ig.media.like({ mediaId, moduleInfo: { module_name: "profile" }, d: 0 });
+    await ig.media.like({ mediaId, moduleInfo: { module_name: "feed_timeline" } as never, d: 0 });
     return { success: true, target: mediaId, message: "좋아요 성공" };
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "unknown error";
