@@ -45,7 +45,7 @@ export default function LoginPage() {
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center text-white font-black text-lg shadow-md">
             B
           </div>
-          <span className="text-xl font-black tracking-tight text-slate-900">인스타봇 프로</span>
+          <span className="text-xl font-black tracking-tight text-slate-900">라이케티카</span>
         </Link>
 
         <div className="bg-white rounded-2xl p-8 border-2 border-slate-900 shadow-xl">
