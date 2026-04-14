@@ -57,8 +57,8 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-slate-300 pt-4 flex flex-col sm:flex-row justify-between gap-2 text-[11px] text-slate-500">
-          <p>&copy; {new Date().getFullYear()} InstaBot Pro. All rights reserved.</p>
-          <p>인스타봇 프로는 Instagram과 제휴 관계가 아닙니다.</p>
+          <p>&copy; {new Date().getFullYear()} Liketica. All rights reserved.</p>
+          <p>라이케티카는 Instagram과 제휴 관계가 아닙니다.</p>
         </div>
       </div>
     </footer>
