@@ -8,7 +8,7 @@ export default function BentoSkin() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-violet-600 flex items-center justify-center text-white font-bold">I</div>
-            <span className="font-bold tracking-tight">InstaBot Pro</span>
+            <span className="font-bold tracking-tight">Liketica</span>
           </div>
           <div className="flex items-center gap-2">
             <Link href="/skin" className="text-xs text-slate-500 hover:text-slate-900">← 스킨 비교</Link>
