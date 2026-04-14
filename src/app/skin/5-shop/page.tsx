@@ -241,11 +241,11 @@ export default function ShopSkin() {
             <div>
               <p className="font-black text-slate-900 mb-2">무통장 입금</p>
               <p>국민은행 000-00-0000-000</p>
-              <p>예금주: (주)인스타봇프로</p>
+              <p>예금주: (주)라이케티카</p>
             </div>
             <div>
               <p className="font-black text-slate-900 mb-2">회사정보</p>
-              <p>(주)인스타봇프로</p>
+              <p>(주)라이케티카</p>
               <p>대표: 홍길동 · 사업자: 000-00-00000</p>
               <p>서울특별시 강남구 테헤란로 000</p>
             </div>
