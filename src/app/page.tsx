@@ -26,7 +26,7 @@ const bestProducts = [
     badgeColor: "bg-orange-500",
     emoji: "💥",
     tag: "자동화 구독 · Starter",
-    title: "InstaBot Starter 월 구독",
+    title: "Liketica Starter 월 구독",
     desc: "1계정 · 일 500 좋아요 · 자동 팔로우",
     price: "19,000",
     original: "29,000",
