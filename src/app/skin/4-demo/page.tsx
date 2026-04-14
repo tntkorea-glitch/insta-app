@@ -39,7 +39,7 @@ export default function DemoSkin() {
       <header className="border-b border-white/5 px-6 py-4 flex items-center justify-between sticky top-0 bg-[#0b0d12]/80 backdrop-blur z-50">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-sky-500" />
-          <span className="font-bold tracking-tight">InstaBot Pro</span>
+          <span className="font-bold tracking-tight">Liketica</span>
         </div>
         <div className="flex items-center gap-3 text-sm">
           <Link href="/skin" className="text-white/50 hover:text-white">← 스킨</Link>
