@@ -43,7 +43,7 @@ export default function LoginPage() {
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center gap-2 mb-6">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center text-white font-black text-lg shadow-md">
-            B
+            L
           </div>
           <span className="text-xl font-black tracking-tight text-slate-900">라이케티카</span>
         </Link>
