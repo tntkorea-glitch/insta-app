@@ -38,8 +38,8 @@ export default function Header() {
       <header className="border-b-2 border-slate-900 bg-white">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center text-white font-black text-lg shadow-md">B</div>
-            <span className="text-lg sm:text-xl font-black tracking-tight">인스타봇 프로</span>
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center text-white font-black text-lg shadow-md">L</div>
+            <span className="text-lg sm:text-xl font-black tracking-tight">라이케티카</span>
           </Link>
 
           {/* Search */}
