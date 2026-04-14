@@ -64,7 +64,7 @@ export default function RegisterPage() {
       <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 w-full max-w-md border border-white/20">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">
-            🤖 InstaBot Pro
+            🤖 Liketica
           </h1>
           <p className="text-gray-300">새 계정을 만드세요</p>
         </div>
