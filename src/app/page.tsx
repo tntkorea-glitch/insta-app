@@ -306,7 +306,7 @@ export default function Home() {
               <Link href="/dashboard" className="bg-white text-rose-600 font-black px-8 py-3.5 rounded-full text-sm hover:bg-yellow-50 transition shadow-lg">
                 무료로 시작하기 →
               </Link>
-              <a href="https://pf.kakao.com/_instabotpro" target="_blank" rel="noopener noreferrer" className="bg-yellow-300 text-yellow-900 font-black px-8 py-3.5 rounded-full text-sm hover:bg-yellow-400 transition">
+              <a href="https://pf.kakao.com/_liketica" target="_blank" rel="noopener noreferrer" className="bg-yellow-300 text-yellow-900 font-black px-8 py-3.5 rounded-full text-sm hover:bg-yellow-400 transition">
                 💬 카톡 상담
               </a>
             </div>
