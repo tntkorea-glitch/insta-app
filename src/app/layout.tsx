@@ -4,12 +4,13 @@ import AuthProvider from "@/lib/auth-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "InstaBot Pro - 인스타그램 자동화 플랫폼",
+  title: "Liketica - 인스타그램 자동화 플랫폼",
   description:
     "팔로우, 좋아요, 댓글을 AI가 자동으로 관리합니다. 인스타그램 성장을 자동화하세요.",
   keywords: [
     "인스타그램 자동화",
-    "인스타봇",
+    "라이케티카",
+    "Liketica",
     "팔로워 늘리기",
     "좋아요 자동",
     "인스타그램 마케팅",
