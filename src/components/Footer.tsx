@@ -52,7 +52,7 @@ export default function Footer() {
             <p>사업자등록: 000-00-00000</p>
             <p>통신판매업: 2026-서울강남-00000</p>
             <p>주소: 서울특별시 강남구 테헤란로 000</p>
-            <p>메일: support@instabotpro.com</p>
+            <p>메일: support@liketica.com</p>
           </div>
         </div>
 
