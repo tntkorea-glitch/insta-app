@@ -38,9 +38,12 @@ export default function AnalyticsPage() {
   const [recentLogs, setRecentLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const periodDays = period === "7일" ? 7 : period === "30일" ? 30 : 90;
+
   const fetchAnalytics = useCallback(async () => {
     try {
-      const res = await fetch("/api/analytics");
+      setLoading(true);
+      const res = await fetch(`/api/analytics?period=${periodDays}`);
       if (res.ok) {
         const data = await res.json();
         setAccounts(data.accounts || []);
@@ -52,15 +55,11 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [periodDays]);
 
   useEffect(() => { fetchAnalytics(); }, [fetchAnalytics]);
 
-  // 기간별 데이터 필터링
-  const periodDays = period === "7일" ? 7 : period === "30일" ? 30 : 90;
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - periodDays);
-  const filtered = analytics.filter((a) => new Date(a.date) >= cutoff);
+  const filtered = analytics;
 
   // 요약 통계 계산
   const totalGained = filtered.reduce((s, a) => s + a.followersGained, 0);
