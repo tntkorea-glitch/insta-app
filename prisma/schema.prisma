@@ -81,15 +81,72 @@ model InstaAccount {
   following    Int      @default(0)
   posts        Int      @default(0)
   active       Boolean  @default(true)
-  status       String   @default("idle") // idle, running, paused, error
+  status       String   @default("idle") // idle, running, paused, pending_2fa, error
   lastActivity DateTime?
-  proxy        String?
+  proxy        String?  // legacy raw proxy URL (kept for backward compat)
+  proxyId      String?
+  twoFactorEnabled   Boolean @default(false)
+  twoFactorIdentifier String? // IG challenge session id (transient)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  proxyConfig  Proxy?         @relation(fields: [proxyId], references: [id], onDelete: SetNull)
   activityLogs ActivityLog[]
   analytics    AnalyticsDaily[]
+
+  @@index([proxyId])
+}
+
+// ==================== Proxies ====================
+
+model Proxy {
+  id        String   @id @default(cuid())
+  userId    String
+  label     String
+  protocol  String   @default("http") // http, https, socks5
+  host      String
+  port      Int
+  username  String?
+  password  String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accounts InstaAccount[]
+
+  @@index([userId])
+}
+
+// ==================== Notifications ====================
+
+model NotificationPreference {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  emailEnabled      Boolean  @default(true)
+  notifyOnError     Boolean  @default(true)
+  notifyOnSuccess   Boolean  @default(false)
+  notifyDailyReport Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NotificationLog {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // error, success, daily
+  subject   String
+  message   String
+  email     String
+  status    String   @default("sent") // sent, failed
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 // ==================== Automation Config ====================
