@@ -182,19 +182,43 @@ async function runLoop(
   let client: IgApiClient;
 
   try {
+    const proxyUrl =
+      account.proxyConfig && account.proxyConfig.active
+        ? buildProxyUrl(account.proxyConfig)
+        : account.proxy || undefined;
     const creds: InstaCredentials = {
       username: account.username,
       password: account.password,
-      proxy: account.proxy || undefined,
+      proxy: proxyUrl,
     };
     client = await ig.login(creds);
   } catch (e) {
     console.error("Login failed:", e);
     runningAccounts.set(accountId, { running: false, stats });
+
+    if (e instanceof TwoFactorRequiredError) {
+      await prisma.instaAccount.update({
+        where: { id: accountId },
+        data: {
+          status: "pending_2fa",
+          twoFactorEnabled: true,
+          twoFactorIdentifier: e.twoFactorIdentifier,
+        },
+      });
+      await notifyError(
+        account.userId,
+        account.username,
+        "2단계 인증 코드가 필요합니다. 계정 페이지에서 코드를 입력해 주세요."
+      ).catch(() => {});
+      return;
+    }
+
     await prisma.instaAccount.update({
       where: { id: accountId },
       data: { status: "error" },
     });
+    const msg = e instanceof Error ? e.message : "알 수 없는 오류";
+    await notifyError(account.userId, account.username, msg).catch(() => {});
     return;
   }
 
