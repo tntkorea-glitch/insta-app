@@ -488,6 +488,75 @@ export default function AccountsPage() {
           </div>
         </div>
       )}
+
+      {/* 2FA Code Modal */}
+      {twoFAAccount && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-white">2단계 인증 코드</h2>
+              <button
+                onClick={() => {
+                  setTwoFAAccount(null);
+                  setTwoFACode("");
+                  setTwoFAError("");
+                }}
+                className="p-1 rounded-lg hover:bg-gray-700 text-gray-400"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-400 mb-4">
+              @{twoFAAccount.username} 계정으로 전송된 6자리 인증 코드를 입력하세요.
+            </p>
+
+            {twoFAError && (
+              <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm mb-4">
+                {twoFAError}
+              </div>
+            )}
+
+            <input
+              type="text"
+              value={twoFACode}
+              onChange={(e) => setTwoFACode(e.target.value.replace(/\D/g, "").slice(0, 8))}
+              placeholder="000000"
+              maxLength={8}
+              className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-lg text-white tracking-[0.5em] text-center placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              autoFocus
+            />
+
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mt-4">
+              <p className="text-xs text-yellow-400">
+                2FA 세션은 10분 후 만료됩니다. 만료되면 자동화를 다시 시작해야 합니다.
+              </p>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setTwoFAAccount(null);
+                  setTwoFACode("");
+                  setTwoFAError("");
+                }}
+                className="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-300 py-2.5 rounded-lg text-sm font-medium"
+              >
+                취소
+              </button>
+              <button
+                onClick={submitTwoFA}
+                disabled={twoFASaving || twoFACode.length < 6}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg text-sm font-medium disabled:opacity-50"
+              >
+                {twoFASaving ? "검증 중..." : "인증"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
