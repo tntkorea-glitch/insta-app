@@ -46,7 +46,10 @@ async function sendViaSmtp(opts: EmailOptions): Promise<SendResult> {
   }
 
   try {
-    const mod = await import("nodemailer").catch(() => null);
+    // nodemailer is an optional peer dep — type it as unknown so TS doesn't require its types
+    const mod = (await import("nodemailer" as string).catch(() => null)) as
+      | { default: { createTransport: (opts: unknown) => { sendMail: (opts: unknown) => Promise<unknown> } } }
+      | null;
     if (!mod) return { ok: false, error: "nodemailer not installed" };
     const transporter = mod.default.createTransport({
       host: SMTP_HOST,
