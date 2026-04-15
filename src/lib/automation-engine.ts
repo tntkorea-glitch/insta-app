@@ -223,7 +223,7 @@ async function runLoop(
   }
 
   // Parse task intervals from schedule
-  let taskIntervals: Record<string, number> = {
+  const taskIntervals: Record<string, number> = {
     follow: config.followDelay,
     unfollow: config.unfollowDelay,
     like: config.likeDelay,
