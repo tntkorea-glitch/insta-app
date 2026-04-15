@@ -1,4 +1,4 @@
-import { IgApiClient } from "instagram-private-api";
+import { IgApiClient, IgLoginTwoFactorRequiredError } from "instagram-private-api";
 
 export interface InstaCredentials {
   username: string;
@@ -12,8 +12,24 @@ export interface ActionResult {
   message?: string;
 }
 
+export class TwoFactorRequiredError extends Error {
+  constructor(
+    public readonly twoFactorIdentifier: string,
+    public readonly totpOn: boolean
+  ) {
+    super("2FA required");
+    this.name = "TwoFactorRequiredError";
+  }
+}
+
 // Session cache to avoid re-login
 const sessionCache = new Map<string, { client: IgApiClient; expiresAt: number }>();
+
+// Pending 2FA challenges (short-lived, 10min)
+const pendingTwoFactor = new Map<
+  string,
+  { client: IgApiClient; identifier: string; expiresAt: number }
+>();
 
 function getClient(proxy?: string): IgApiClient {
   const ig = new IgApiClient();
@@ -32,15 +48,56 @@ export async function login(creds: InstaCredentials): Promise<IgApiClient> {
   const ig = getClient(creds.proxy);
   ig.state.generateDevice(creds.username);
 
-  await ig.account.login(creds.username, creds.password);
+  try {
+    await ig.account.login(creds.username, creds.password);
+  } catch (e) {
+    if (e instanceof IgLoginTwoFactorRequiredError) {
+      const info = e.response.body.two_factor_info;
+      pendingTwoFactor.set(creds.username, {
+        client: ig,
+        identifier: info.two_factor_identifier,
+        expiresAt: Date.now() + 10 * 60 * 1000,
+      });
+      throw new TwoFactorRequiredError(
+        info.two_factor_identifier,
+        Boolean(info.totp_two_factor_on)
+      );
+    }
+    throw e;
+  }
 
-  // Cache session for 30 minutes
   sessionCache.set(creds.username, {
     client: ig,
     expiresAt: Date.now() + 30 * 60 * 1000,
   });
 
   return ig;
+}
+
+export async function completeTwoFactorLogin(
+  username: string,
+  code: string
+): Promise<IgApiClient> {
+  const pending = pendingTwoFactor.get(username);
+  if (!pending || pending.expiresAt < Date.now()) {
+    pendingTwoFactor.delete(username);
+    throw new Error("2FA 세션이 만료되었습니다. 다시 시도하세요.");
+  }
+
+  await pending.client.account.twoFactorLogin({
+    username,
+    verificationCode: code,
+    twoFactorIdentifier: pending.identifier,
+    verificationMethod: "1", // SMS by default; TOTP uses '0'
+    trustThisDevice: "1",
+  });
+
+  pendingTwoFactor.delete(username);
+  sessionCache.set(username, {
+    client: pending.client,
+    expiresAt: Date.now() + 30 * 60 * 1000,
+  });
+  return pending.client;
 }
 
 export async function followUser(ig: IgApiClient, targetUsername: string): Promise<ActionResult> {
