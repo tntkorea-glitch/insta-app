@@ -1,7 +1,10 @@
 import { prisma } from "./prisma";
 import * as ig from "./instagram";
+import { TwoFactorRequiredError } from "./instagram";
 import type { InstaCredentials, ActionResult } from "./instagram";
 import type { IgApiClient } from "instagram-private-api";
+import { buildProxyUrl } from "./proxy-utils";
+import { notifyError } from "./notifications";
 
 // In-memory running state (per-process)
 const runningAccounts = new Map<string, { running: boolean; stats: RunStats }>();
