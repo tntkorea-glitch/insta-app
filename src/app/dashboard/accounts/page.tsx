@@ -324,7 +324,18 @@ export default function AccountsPage() {
                       {formatLastActivity(account.lastActivity)}
                     </td>
                     <td className="px-5 py-4">
-                      {account.active && (
+                      {account.status === "pending_2fa" ? (
+                        <button
+                          onClick={() => {
+                            setTwoFAAccount(account);
+                            setTwoFACode("");
+                            setTwoFAError("");
+                          }}
+                          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30"
+                        >
+                          2FA 코드 입력
+                        </button>
+                      ) : account.active ? (
                         <button
                           onClick={() => toggleAutomation(account.id, account.status === "running" || runningIds.has(account.id))}
                           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
@@ -335,7 +346,7 @@ export default function AccountsPage() {
                         >
                           {account.status === "running" || runningIds.has(account.id) ? "중지" : "시작"}
                         </button>
-                      )}
+                      ) : null}
                     </td>
                     <td className="px-5 py-4">
                       <button
