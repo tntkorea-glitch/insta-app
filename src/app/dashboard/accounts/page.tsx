@@ -152,25 +152,6 @@ export default function AccountsPage() {
     }
   };
 
-  const changeProxy = async (accountId: string, proxyId: string) => {
-    await fetch("/api/accounts", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: accountId, proxyId: proxyId || null }),
-    });
-    setAccounts((prev) =>
-      prev.map((a) =>
-        a.id === accountId
-          ? {
-              ...a,
-              proxyId: proxyId || null,
-              proxyConfig: proxies.find((p) => p.id === proxyId) || null,
-            }
-          : a
-      )
-    );
-  };
-
   const toggleAutomation = async (accountId: string, isRunning: boolean) => {
     const action = isRunning ? "stop" : "start";
     try {
