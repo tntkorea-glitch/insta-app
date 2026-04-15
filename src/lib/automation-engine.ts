@@ -105,6 +105,7 @@ export async function runAutomation(userId: string, accountId: string) {
   // Load account + config
   const account = await prisma.instaAccount.findFirst({
     where: { id: accountId, userId },
+    include: { proxyConfig: true },
   });
   if (!account) return { error: "계정을 찾을 수 없습니다" };
 
