@@ -262,7 +262,27 @@ export default function SettingsPage() {
                       </button>
                     </td>
                     <td className="py-3">
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 items-center">
+                        <button
+                          onClick={() => testProxy(p)}
+                          disabled={testingProxyId === p.id}
+                          className="text-xs px-2 py-1 rounded-lg bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-gray-200"
+                          title="연결 테스트"
+                        >
+                          {testingProxyId === p.id ? "테스트 중..." : "테스트"}
+                        </button>
+                        {proxyTestResults[p.id] && (
+                          <span
+                            className={`text-[10px] px-1.5 py-0.5 rounded ${
+                              proxyTestResults[p.id].ok
+                                ? "bg-green-500/20 text-green-300"
+                                : "bg-red-500/20 text-red-300"
+                            }`}
+                            title={proxyTestResults[p.id].text}
+                          >
+                            {proxyTestResults[p.id].ok ? "OK" : "FAIL"}
+                          </span>
+                        )}
                         <button
                           onClick={() => openEdit(p)}
                           className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white"
