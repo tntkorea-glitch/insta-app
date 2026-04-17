@@ -119,6 +119,30 @@ export default function SettingsPage() {
     setProxies((prev) => prev.filter((p) => p.id !== id));
   };
 
+  const testProxy = async (p: Proxy) => {
+    setTestingProxyId(p.id);
+    setProxyTestResults((prev) => {
+      const next = { ...prev };
+      delete next[p.id];
+      return next;
+    });
+    try {
+      const res = await fetch(`/api/proxies/${p.id}/test`, { method: "POST" });
+      const data = await res.json();
+      setProxyTestResults((prev) => ({
+        ...prev,
+        [p.id]: { ok: !!data.success, text: data.message || (data.success ? "성공" : "실패") },
+      }));
+    } catch (e) {
+      setProxyTestResults((prev) => ({
+        ...prev,
+        [p.id]: { ok: false, text: e instanceof Error ? e.message : "요청 실패" },
+      }));
+    } finally {
+      setTestingProxyId(null);
+    }
+  };
+
   const toggleProxy = async (p: Proxy) => {
     await fetch("/api/proxies", {
       method: "PUT",
