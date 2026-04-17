@@ -38,6 +38,8 @@ export default function SettingsPage() {
   const [testing, setTesting] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [testingProxyId, setTestingProxyId] = useState<string | null>(null);
+  const [proxyTestResults, setProxyTestResults] = useState<Record<string, { ok: boolean; text: string }>>({});
 
   const fetchAll = useCallback(async () => {
     try {
