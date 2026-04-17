@@ -189,7 +189,7 @@ async function runLoop(
         : account.proxy || undefined;
     const creds: InstaCredentials = {
       username: account.username,
-      password: account.password,
+      password: decrypt(account.password),
       proxy: proxyUrl,
     };
     client = await ig.login(creds);
