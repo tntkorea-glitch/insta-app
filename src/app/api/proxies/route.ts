@@ -74,7 +74,13 @@ export async function PUT(request: NextRequest) {
   const { id, ...rest } = parsed.data;
   const data: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(rest)) {
-    if (v !== undefined) data[k] = v;
+    if (v === undefined) continue;
+    if (k === "password") {
+      if (v === "" || v === null) continue; // keep existing on blank
+      data.password = encrypt(v as string);
+    } else {
+      data[k] = v;
+    }
   }
 
   await prisma.proxy.updateMany({
